@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CrypShare – Verschlüsselte Dateifreigabe (Prototyp)</title>
+  <meta name="description" content="Lernprototyp zur browserbasierten Dateiverschlüsselung mit AES-256-GCM. Nicht unabhängig geprüft.">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2300f0ff'><path d='M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 6c1.4 0 2.5 1.1 2.5 2.5 0 .9-.5 1.7-1.2 2.1l.7 3.4h-4l.7-3.4c-.7-.4-1.2-1.2-1.2-2.1 0-1.4 1.1-2.5 2.5-2.5z'/></svg>">
+</head>
+<body>
+
+  <!-- Hintergrund-Gitter -->
+  <div class="grid-bg"></div>
+
+  <!-- Header & Navigation -->
+  <header class="header">
+    <div class="container nav-container">
+      <a href="#" class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 6c1.4 0 2.5 1.1 2.5 2.5 0 .9-.5 1.7-1.2 2.1l.7 3.4h-4l.7-3.4c-.7-.4-1.2-1.2-1.2-2.1 0-1.4 1.1-2.5 2.5-2.5z"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-title">CrypShare</span>
+          <span class="brand-subtitle" data-i18n="brandSubtitle">Verschlüsselte Dateifreigabe (Demo)</span>
+        </div>
+      </a>
+
+      <!-- Navigation Tabs -->
+      <nav class="nav-tabs">
+        <button class="nav-tab-btn active" data-tab="upload" id="nav-upload-tab">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span data-i18n="tabUpload">Datei hochladen</span>
+        </button>
+        <button class="nav-tab-btn" data-tab="receive" id="nav-receive-tab">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span data-i18n="tabReceive">Empfangen & Entschlüsseln</span>
+        </button>
+        <button class="nav-tab-btn" data-tab="inspector" id="nav-inspector-tab">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+          <span data-i18n="tabInspector">Krypto- & DSGVO-Inspektor</span>
+        </button>
+        <button class="nav-tab-btn" data-tab="arch" id="nav-arch-tab">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          <span data-i18n="tabArch">Architektur & Ausbildung</span>
+        </button>
+      </nav>
+
+      <!-- DSGVO Badge & Sprache -->
+      <div class="nav-right">
+        <div class="dsgvo-badge">
+          <div class="dsgvo-badge-dot"></div>
+          <span data-i18n="dsgvoBadge">Demo – nicht auditiert</span>
+        </div>
+        <div class="lang-selector">
+          <button class="lang-btn active" data-lang="de">DE 🇩🇪</button>
+          <button class="lang-btn" data-lang="en">EN 🇬🇧</button>
+          <button class="lang-btn" data-lang="uz">UZ 🇺🇿</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-pill" data-i18n="heroPill">
+        Browserbasierte AES-256-GCM-Verschlüsselung (Prototyp)
+      </div>
+      <h1 class="hero-title" data-i18n="heroTitle">
+        Dateien verschlüsselt teilen. <span>Prototyp.</span>
+      </h1>
+      <p class="hero-desc" data-i18n="heroDesc">
+        Dateien werden vor dem Upload im Browser verschlüsselt. Dieses Lernprojekt wurde nicht unabhängig geprüft.
+      </p>
+    </div>
+  </section>
+
+  <!-- Hauptinhalt -->
+  <main class="container">
+
+    <!-- ====================================================================
+         TAB 1: DATEI HOCHLADEN (UPLOAD)
+         ==================================================================== -->
+    <section class="tab-content-section" id="tab-upload">
+      <div class="main-card">
+
+        <!-- Dropzone -->
+        <div class="dropzone" id="upload-dropzone">
+          <input type="file" id="file-input" style="display: none;">
+          <div class="dropzone-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          </div>
+          <h3 class="dropzone-title" data-i18n="dropTitle">Datei hier hineinziehen oder klicken</h3>
+          <p class="dropzone-sub" data-i18n="dropSub">PDF, Bilder, Dokumente oder Archive bis zu 50 MB</p>
+          <button class="dropzone-btn" type="button" data-i18n="dropBtn">Datei auswählen</button>
+        </div>
+
+        <!-- File Selected Preview -->
+        <div class="file-preview" id="file-preview">
+          <div class="file-info-group">
+            <div class="file-type-icon">FILE</div>
+            <div>
+              <div class="file-name" id="preview-file-name">beispiel_dokument.pdf</div>
+              <div class="file-meta" id="preview-file-meta">2.4 MB • application/pdf</div>
+            </div>
+          </div>
+          <button class="file-remove-btn" id="file-remove-btn" title="Datei entfernen">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+
+        <!-- Security Options Grid -->
+        <div class="options-grid">
+          <!-- Gültigkeitsdauer (TTL) -->
+          <div class="option-box">
+            <label class="option-label">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span data-i18n="optTtlLabel">Gültigkeitsdauer (TTL)</span>
+            </label>
+            <select class="select-custom" id="opt-ttl">
+              <option value="5" data-i18n="optTtl5m">5 Minuten (Express)</option>
+              <option value="60" selected data-i18n="optTtl1h">1 Stunde (Standard)</option>
+              <option value="1440" data-i18n="optTtl24h">24 Stunden (1 Tag)</option>
+              <option value="10080" data-i18n="optTtl7d">7 Tage (Langzeit)</option>
+            </select>
+          </div>
+
+          <!-- Download Limit -->
+          <div class="option-box">
+            <label class="option-label">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span data-i18n="optMaxDownLabel">Download-Limit</span>
+            </label>
+            <select class="select-custom" id="opt-max-downloads">
+              <option value="1" selected data-i18n="optDown1">1x Download (Selbstzerstörung)</option>
+              <option value="3" data-i18n="optDown3">3x Downloads</option>
+              <option value="10" data-i18n="optDown10">10x Downloads</option>
+              <option value="0" data-i18n="optDownUnlim">Unbegrenzt (bis Ablauf)</option>
+            </select>
+          </div>
+
+          <!-- Schlüsselmodus -->
+          <div class="option-box">
+            <label class="option-label">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <span data-i18n="optKeyLabel">Schlüsselverwaltung</span>
+            </label>
+            <div class="mode-toggle-group">
+              <button class="mode-toggle-btn active" id="mode-url-btn" type="button">URL-Hash Key</button>
+              <button class="mode-toggle-btn" id="mode-pass-btn" type="button">Passwort</button>
+            </div>
+            <div id="pass-input-container" style="display: none;">
+              <div class="input-with-btn">
+                <input type="text" class="input-custom" id="password-input" placeholder="Passwort eingeben..." data-i18n="passPlaceholder">
+                <button class="input-icon-btn" id="gen-pass-btn" type="button" title="Zufallsschlüssel generieren" data-i18n="genPassBtn">Neu</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Button -->
+        <button class="btn-primary" id="encrypt-send-btn" disabled>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span data-i18n="btnEncryptSend">Verschlüsseln und Senden</span>
+        </button>
+
+        <!-- Progress Box -->
+        <div class="progress-card" id="progress-card">
+          <div class="progress-header">
+            <span class="progress-status" id="progress-status">Web Crypto Initialisierung...</span>
+            <span class="progress-pct" id="progress-pct">0%</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="progress-bar-fill"></div>
+          </div>
+          <div class="crypto-step-logs" id="crypto-step-logs"></div>
+        </div>
+
+        <!-- Result / Share Card -->
+        <div class="result-card" id="result-card">
+          <div class="result-badge">✓ Verschlüsseltes Paket erstellt</div>
+          <h2 class="result-title" data-i18n="uploadSuccessTitle">Datei erfolgreich verschlüsselt und bereitgestellt!</h2>
+          <p style="color: var(--text-muted); font-size: 0.9rem;" data-i18n="uploadSuccessSub">
+            Der Freigabelink ist aktiv. Der geheime Schlüssel verlässt niemals Ihren Browser unverschlüsselt.
+          </p>
+
+          <div class="link-box-container">
+            <input type="text" class="link-input" id="share-link-input" readonly>
+            <button class="copy-btn" id="copy-link-btn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <span data-i18n="copyLinkBtn">Link kopieren</span>
+            </button>
+          </div>
+
+          <div class="share-details-grid">
+            <div class="share-meta-list">
+              <div class="share-meta-row">
+                <span class="share-meta-label">Datei-ID:</span>
+                <span class="share-meta-value" id="result-file-id">cs-xxxx</span>
+              </div>
+              <div class="share-meta-row">
+                <span class="share-meta-label">Gültigkeitsdauer:</span>
+                <span class="share-meta-value" id="result-ttl">60 Min</span>
+              </div>
+              <div class="share-meta-row">
+                <span class="share-meta-label">Max. Downloads:</span>
+                <span class="share-meta-value" id="result-downloads">1x</span>
+              </div>
+              <div class="share-meta-row">
+                <span class="share-meta-label">SHA-256 Integrität:</span>
+                <span class="share-meta-value" id="result-checksum">a1b2c3...</span>
+              </div>
+            </div>
+            <div class="qr-canvas-container">
+              <canvas id="qr-canvas"></canvas>
+              <p data-i18n="qrPreviewNotice">Dekorative Vorschau – kein scanbarer QR-Code</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         TAB 2: EMPFANGEN & ENTSCHLÜSSELN (RECEIVE)
+         ==================================================================== -->
+    <section class="tab-content-section" id="tab-receive" style="display: none;">
+      <div class="main-card">
+        <h2 class="result-title" style="margin-bottom: 8px;" data-i18n="receiveTitle">Verschlüsselte Datei empfangen</h2>
+        <p style="color: var(--text-muted); margin-bottom: 24px;" data-i18n="receiveDesc">
+          Geben Sie die Datei-ID oder den Freigabelink ein, um die Daten im Browser zu entschlüsseln.
+        </p>
+
+        <div class="decrypt-box">
+          <div style="margin-bottom: 16px;">
+            <label class="option-label">Datei-ID / Freigabecode</label>
+            <input type="text" class="input-custom" id="receive-file-id" placeholder="Datei-ID eingeben (z.B. cs-a1b2c3d4)...">
+          </div>
+
+          <div style="margin-bottom: 20px;">
+            <label class="option-label">Entschlüsselungsschlüssel / Passwort</label>
+            <input type="text" class="input-custom" id="receive-password" placeholder="Passwort oder Secret-Key...">
+          </div>
+
+          <button class="btn-primary" id="receive-fetch-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span data-i18n="btnFetchDecrypt">Herunterladen & Entschlüsseln</span>
+          </button>
+        </div>
+
+        <!-- Receive Progress -->
+        <div class="progress-card" id="receive-progress-card">
+          <div class="progress-header">
+            <span class="progress-status" id="receive-progress-status">Ladevorgang...</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="receive-progress-fill"></div>
+          </div>
+        </div>
+
+        <!-- Receive File Details Card -->
+        <div class="result-card" id="receive-info-card">
+          <div class="file-status-badge encrypted" style="margin-bottom: 14px;">🔒 Verschlüsseltes Paket geladen</div>
+          <h3 class="result-title" id="rec-file-name">datei.pdf</h3>
+          <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 20px;">
+            Größe: <span id="rec-file-size">0 KB</span> • Hochgeladen: <span id="rec-file-date">-</span>
+          </p>
+
+          <button class="btn-primary" id="receive-decrypt-btn" style="background: linear-gradient(135deg, var(--accent-emerald), #059669);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+            <span>Jetzt entschlüsseln und sichern</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         TAB 3: KRYPTO- & DSGVO-INSPEKTOR
+         ==================================================================== -->
+    <section class="tab-content-section" id="tab-inspector" style="display: none;">
+      <div class="main-card">
+        <div class="inspector-header">
+          <div class="hero-pill" style="margin-bottom: 10px;">🔍 Kryptografie-Demo (kein Audit)</div>
+          <h2 class="result-title" data-i18n="inspectorTitle">Live DSGVO & Krypto-Inspektor</h2>
+          <p style="color: var(--text-muted);" data-i18n="inspectorDesc">
+            Sehen Sie, wie der Browser Daten mit AES-256-GCM verschlüsselt. Diese Demo ist kein unabhängiges Sicherheitsaudit.
+          </p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 24px;">
+          <input type="text" class="input-custom" id="insp-plain-input" value="CrypShare – Verschlüsselungsdemo" placeholder="Klartext eingeben...">
+          <input type="text" class="input-custom" id="insp-pass-input" value="DemoPassphrase-Only" placeholder="Test-Passwort...">
+        </div>
+
+        <button class="btn-primary" id="insp-run-btn" style="margin-bottom: 30px;">
+          <span>Pipeline Ausführen & Analysieren</span>
+        </button>
+
+        <div class="inspector-pipeline">
+          <!-- Schritt 1: Klartext -->
+          <div class="pipeline-node active-step">
+            <div class="pipeline-node-header">
+              <div class="pipeline-step-badge">
+                <div class="pipeline-badge-num">1</div>
+                <span>Klartext (Plaintext) im Browser</span>
+              </div>
+              <span style="font-size: 0.78rem; color: var(--text-muted);">UTF-8 ArrayBuffer</span>
+            </div>
+            <div class="hex-dump-box" id="insp-plain-hex">43 72 79 70 53 68 61 72 65 ...</div>
+          </div>
+
+          <!-- Schritt 2: PBKDF2 & Salt -->
+          <div class="pipeline-node">
+            <div class="pipeline-node-header">
+              <div class="pipeline-step-badge">
+                <div class="pipeline-badge-num">2</div>
+                <span>PBKDF2 Schlüsselableitung (100.000 Runden SHA-256)</span>
+              </div>
+              <span style="font-size: 0.78rem; color: var(--accent-cyan);">128-bit Salt + 96-bit IV</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px;">
+              <div>
+                <span style="font-size: 0.75rem; color: var(--text-dim);">Kryptografischer Salt (Hex):</span>
+                <div class="hex-dump-box" id="insp-salt-hex">f3a8...</div>
+              </div>
+              <div>
+                <span style="font-size: 0.75rem; color: var(--text-dim);">AES-GCM IV (Hex):</span>
+                <div class="hex-dump-box" id="insp-iv-hex">9e12...</div>
+              </div>
+            </div>
+            <div>
+              <span style="font-size: 0.75rem; color: var(--accent-cyan);">Abgeleiteter 256-bit AES-GCM Master-Schlüssel:</span>
+              <div class="hex-dump-box" id="insp-key-hex" style="color: var(--accent-emerald);">a4f9...</div>
+            </div>
+          </div>
+
+          <!-- Schritt 3: AES-256-GCM Ciphertext -->
+          <div class="pipeline-node">
+            <div class="pipeline-node-header">
+              <div class="pipeline-step-badge">
+                <div class="pipeline-badge-num">3</div>
+                <span>AES-256-GCM Authentifizierter Ciphertext</span>
+              </div>
+              <span style="font-size: 0.78rem; color: var(--accent-emerald);">16-Byte Auth Tag</span>
+            </div>
+            <div class="hex-dump-box" id="insp-cipher-hex" style="color: var(--accent-violet);">8e 41 9b cd ...</div>
+          </div>
+
+          <!-- Was der Server sieht (Blind Storage) -->
+          <div class="server-blind-card">
+            <div class="server-blind-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+              <span>Beispielansicht der Paketdaten (keine unabhängige Serverprüfung):</span>
+            </div>
+            <pre class="hex-dump-box" id="insp-server-view" style="color: var(--text-muted); max-height: 90px;"></pre>
+          </div>
+
+          <!-- Schritt 4: Verifizierte Entschlüsselung -->
+          <div class="pipeline-node">
+            <div class="pipeline-node-header">
+              <div class="pipeline-step-badge">
+                <div class="pipeline-badge-num">4</div>
+                <span>Verifizierte Entschlüsselung im Ziel-Browser</span>
+              </div>
+              <span style="font-size: 0.78rem; color: var(--accent-emerald);">SHA-256 Checksum OK</span>
+            </div>
+            <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-emerald); border-radius: var(--radius-sm); padding: 12px; font-weight: 600; color: #fff;" id="insp-decrypted-text">
+              -
+            </div>
+            <div style="margin-top: 8px; font-size: 0.75rem; color: var(--text-muted);">
+              SHA-256 Checksum: <span id="insp-checksum-val" style="font-family: var(--font-mono); color: var(--accent-cyan);">-</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         TAB 4: ARCHITEKTUR & AUSBILDUNG (AUSBILDUNG PRÄSENTATION)
+         ==================================================================== -->
+    <section class="tab-content-section" id="tab-arch" style="display: none;">
+      <div class="main-card">
+        <div class="hero-pill" style="margin-bottom: 12px;">🎓 Ausbildung Portfolio & Systemarchitektur</div>
+        <h2 class="result-title">System-Konzeption & DSGVO-Relevanz</h2>
+        <p style="color: var(--text-muted); margin-bottom: 24px;">
+          Entwickelt für Fachinformatiker für Anwendungsentwicklung & Systemintegration (Bewerbung & Fachgespräch).
+        </p>
+
+        <!-- DSGVO Zitat Box -->
+        <div class="dsgvo-quote-box">
+          <div class="dsgvo-quote-german">
+            "Dieses Lernprojekt demonstriert browserbasierte Verschlüsselung. Es wurde nicht unabhängig geprüft und belegt keine DSGVO-Konformität."
+          </div>
+          <div class="dsgvo-quote-trans">
+            (Bu o‘quv loyihasi brauzerda shifrlashni namoyish etadi. U mustaqil tekshirilmagan va DSGVO talablariga moslikni tasdiqlamaydi.)
+          </div>
+        </div>
+
+        <!-- Interaktives Ausbildung Präsentations-Deck (6 Folien) -->
+        <div class="presentation-container" id="pres-container">
+          <div class="pres-header">
+            <div class="pres-badge">📊 Interaktive Präsentation (Slide-Deck)</div>
+            <div class="pres-counter" id="pres-slide-counter">Folie 1 / 6</div>
+          </div>
+
+          <!-- Slide 1 -->
+          <div class="pres-slide active" data-slide="1">
+            <h3 class="pres-slide-title">01. PROJEKTPRÄSENTATION</h3>
+            <h4 class="pres-slide-subtitle">CrypShare: Browserbasierte Dateiverschlüsselung (Prototyp)</h4>
+            <p class="pres-slide-text">
+              Lernprojekt zur browserbasierten Dateiverschlüsselung. Nicht unabhängig geprüft und nicht als DSGVO-Konformitätsnachweis geeignet.
+            </p>
+            <div class="speech-trainer-box">
+              <button class="speech-play-btn" data-speak="Guten Tag! Ich präsentiere Ihnen heute CrypShare, einen Prototyp für browserbasierte Dateiverschlüsselung.">
+                🔊 Aussprache anhören (DE)
+              </button>
+            </div>
+          </div>
+
+          <!-- Slide 2 -->
+          <div class="pres-slide" data-slide="2">
+            <h3 class="pres-slide-title">02. DAS PROBLEM: Cloud-Sicherheitsrisiken</h3>
+            <ul class="pres-list">
+              <li><strong>Vertraulichkeit:</strong> Cloud-Speichermodelle unterscheiden sich; Verschlüsselung und Schlüsselverwaltung müssen bewertet werden.</li>
+              <li><strong>Datenschutz:</strong> Personenbezogene Daten erfordern eine Bewertung des konkreten Einsatzes und der rechtlichen Pflichten.</li>
+              <li><strong>Serverzugriff:</strong> Betreiber können je nach Architektur Zugriff auf gespeicherte Daten oder ausgelieferten Client-Code haben.</li>
+            </ul>
+            <div class="speech-trainer-box">
+              <button class="speech-play-btn" data-speak="Das Problem aktueller Cloud-Dienste ist, dass Administratoren und Provider Zugriff auf unverschlüsselte Daten haben.">
+                🔊 Aussprache anhören (DE)
+              </button>
+            </div>
+          </div>
+
+          <!-- Slide 3 -->
+          <div class="pres-slide" data-slide="3">
+            <h3 class="pres-slide-title">03. CLIENTSEITIGE VERSCHLÜSSELUNG (PROTOTYP)</h3>
+            <ul class="pres-list">
+              <li><strong>Clientseitige Verschlüsselung:</strong> Dateien werden im Browser verschlüsselt, bevor sie gesendet werden.</li>
+              <li><strong>URL-Fragment:</strong> Browser senden das Fragment nicht in HTTP-Anfragen; der vollständige Link muss dennoch geheim bleiben.</li>
+              <li><strong>Ablauf:</strong> TTL- und Download-Limits lösen Löschversuche aus; physische Löschung ist nicht garantiert.</li>
+            </ul>
+            <div class="speech-trainer-box">
+              <button class="speech-play-btn" data-speak="Der Prototyp verschlüsselt Dateien im Browser; die Anwendung wurde nicht unabhängig geprüft.">
+                🔊 Aussprache anhören (DE)
+              </button>
+            </div>
+          </div>
+
+          <!-- Slide 4 -->
+          <div class="pres-slide" data-slide="4">
+            <h3 class="pres-slide-title">04. TECHNOLOGIE-STACK & KRYPTO</h3>
+            <ul class="pres-list">
+              <li><strong>Frontend:</strong> HTML5 Web Crypto API, AES-256-GCM, PBKDF2 (100.000 Iterationen).</li>
+              <li><strong>Backend:</strong> Einfache REST-Server (.NET HttpListener, Python, Node.js).</li>
+              <li><strong>Infrastruktur:</strong> Docker & Docker-Compose Containerisierung.</li>
+            </ul>
+            <div class="speech-trainer-box">
+              <button class="speech-play-btn" data-speak="Wir nutzen AES-256-GCM mit 100.000 Runden PBKDF2 Schlüsselableitung direkt im Browser.">
+                🔊 Aussprache anhören (DE)
+              </button>
+            </div>
+          </div>
+
+          <!-- Slide 5 -->
+          <div class="pres-slide" data-slide="5">
+            <h3 class="pres-slide-title">05. DSGVO-RELEVANZ & MEHRWERT</h3>
+            <ul class="pres-list">
+              <li><strong>Keine Konformitätsaussage:</strong> Das Projekt wurde nicht rechtlich oder sicherheitstechnisch zertifiziert.</li>
+              <li><strong>TTL:</strong> Ablaufregeln begrenzen die Verfügbarkeit, sind aber kein Nachweis sicherer Löschung.</li>
+              <li><strong>Wirtschaftlicher Vorteil:</strong> Sichere interne Datenübertragung ohne teure Drittanbieter-Lizenzen.</li>
+            </ul>
+            <div class="speech-trainer-box">
+              <button class="speech-play-btn" data-speak="Dieses Lernprojekt wurde nicht unabhängig geprüft und bestätigt keine DSGVO-Konformität.">
+                🔊 Aussprache anhören (DE)
+              </button>
+            </div>
+          </div>
+
+          <!-- Slide 6 -->
+          <div class="pres-slide" data-slide="6">
+            <h3 class="pres-slide-title">06. FAZIT FÜR DAS BEWERBUNGSGESPRÄCH</h3>
+            <p class="pres-slide-text">
+              Dieses Projekt demonstriert Grundlagen der <strong>Kryptografie</strong> und <strong>Linux/Windows-Infrastruktur</strong>; es ist kein Nachweis einer geprüften sicheren Architektur oder DSGVO-Konformität.
+            </p>
+            <div class="speech-trainer-box">
+              <button class="speech-play-btn" data-speak="Dieses Lernprojekt demonstriert browserbasierte Verschlüsselung. Es wurde nicht unabhängig geprüft und belegt keine DSGVO-Konformität.">
+                🔊 Perfekte Bewerbungsantwort anhören (DE)
+              </button>
+            </div>
+          </div>
+
+          <!-- Slide Navigation Controls -->
+          <div class="pres-controls">
+            <button class="pres-ctrl-btn" id="pres-prev-btn">‹ Vorherige</button>
+            <div class="pres-dots" id="pres-dots-container"></div>
+            <button class="pres-ctrl-btn primary" id="pres-next-btn">Nächste ›</button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container footer-content">
+      <div>
+        <strong>CrypShare</strong> • Prototyp für browserbasierte Dateiverschlüsselung
+      </div>
+      <div>
+        Entwickelt mit HTML5 Web Crypto API, AES-256-GCM, PBKDF2 & Vanilla CSS
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="crypto.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

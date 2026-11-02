@@ -1,0 +1,15 @@
+# Runtime uploads and metadata
+/storage/*
+
+# Local notes and generated files
+/admin.txt
+__pycache__/
+*.py[cod]
+.env
+.env.*
+
+# Editor and operating-system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

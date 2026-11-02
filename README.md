@@ -1,56 +1,76 @@
-# CrypShare – Verschlüsselte Dateifreigabe (Prototyp)
+# CrypShare
 
-![Architecture](https://img.shields.io/badge/Architecture-Client--Side%20Encryption-blue?style=for-the-badge)
-![Encryption](https://img.shields.io/badge/Encryption-AES--256--GCM-orange?style=for-the-badge)
+### Browser-based encrypted file-sharing prototype
 
-> **Zweck:** Lern- und Portfolio-Projekt
-> **Status:** Prototyp; nicht unabhängig sicherheitsgeprüft und nicht für den produktiven Einsatz freigegeben
-> **Sprachen:** Deutsch | English | O'zbekcha
+**[Download the English project presentation (PPTX)](./CrypShare_Project_Presentation_EN.pptx)** · **[View the source presentation](./CrypShare_Ausbildung_Presentation_095527.pptx)**
 
----
+CrypShare is a learning project that demonstrates encrypting files in the browser before uploading them to a lightweight HTTP server. It uses the Web Crypto API and offers Python, Node.js, and PowerShell server implementations.
 
-## Überblick
+> **Prototype notice:** CrypShare has not been independently security-audited and is not approved for production use. It does not establish GDPR compliance or guaranteed zero-knowledge security. A compromised server could deliver modified client-side code.
 
-CrypShare demonstriert clientseitige Dateiverschlüsselung mit der Web Crypto API und drei einfachen HTTP-Server-Varianten (Python, Node.js und PowerShell). Die Dateien werden im Browser mit AES-256-GCM verschlüsselt, bevor sie an den Server gesendet werden. Beim URL-Modus befindet sich das Geheimnis im URL-Fragment; Browser senden dieses Fragment nicht in HTTP-Anfragen. Behandle den vollständigen Freigabelink trotzdem wie ein Passwort.
+## Project at a glance
 
-Die Anwendung ist **kein geprüftes Zero-Knowledge-Produkt**. Ein kompromittierter oder veränderter Webserver kann manipuliertes JavaScript ausliefern. Es gibt keine unabhängige Sicherheitsprüfung und keine bestätigte DSGVO-Konformität.
+### 01 · The idea
 
-## Implementierte Eckdaten
+Encrypt a file in the browser, then store and share the encrypted package through a small server. The project is intended for learning and portfolio demonstrations—not as a replacement for a reviewed file-sharing service.
 
-| Bereich | Implementierung |
-|---|---|
-| Verschlüsselung | AES-256-GCM über Web Crypto API |
-| Passwortableitung | PBKDF2 / SHA-256, 100.000 Iterationen |
-| Upload-Grenze | 50 MiB pro Anfrage |
-| Ablaufsteuerung | TTL und Download-Zähler; Löschung/Überschreiben ist Best-Effort, keine garantierte physische Vernichtung |
-| Statische Dateien | Nur die Frontend-Dateien werden von den mitgelieferten Servern ausgeliefert |
-| Link-/QR-Vorschau | Die dargestellte Matrix ist dekorativ und kein scanbarer QR-Code |
+### 02 · How it works
 
-## Starten
+1. The browser derives or generates a key and encrypts the selected file with **AES-256-GCM**.
+2. The encrypted package is uploaded with a file ID, expiry setting, and download limit.
+3. A recipient downloads the package and decrypts it in their browser using the key or password.
+4. The URL-fragment mode keeps the key out of ordinary HTTP requests, but the **entire sharing link must be treated as a secret**.
 
-Windows:
+### 03 · Technology
+
+- **Frontend:** HTML, CSS, JavaScript, and the Web Crypto API
+- **Encryption:** AES-256-GCM; PBKDF2 with SHA-256 and 100,000 iterations for password-derived keys
+- **Backends:** Python, Node.js, or PowerShell; optional Docker Compose setup
+- **Upload limit:** 50 MiB per request
+
+### 04 · What this prototype does not guarantee
+
+- No independent security review, authentication, rate limiting, or built-in TLS termination.
+- Expiry and download limits trigger deletion attempts; overwriting does not guarantee physical erasure on SSDs, snapshots, backups, or copy-on-write filesystems.
+- Client-side encryption alone does not protect against a server that changes the JavaScript it serves.
+- The visual link preview is decorative; it is **not** a scannable QR code.
+- GDPR compliance depends on the real deployment and processing context and is not certified by this project.
+
+Do not expose an instance directly to the public internet. A real deployment would need a threat-model review, independent security assessment, HTTPS, access controls, abuse protections, and an appropriate privacy/legal review.
+
+## Run locally
+
+**Windows**
+
 ```cmd
 start_server.bat
 ```
 
-Python:
+**Python**
+
 ```bash
 python server.py
 ```
 
-Node.js:
+**Node.js**
+
 ```bash
 node server.js
 ```
 
-Docker:
+**Docker**
+
 ```bash
 docker compose up --build
 ```
 
-## Grenzen und Veröffentlichung
+Open [http://localhost:8080](http://localhost:8080).
 
-- Die Server bieten keine Anmeldung, Autorisierung, Ratenbegrenzung oder TLS-Terminierung. Nicht direkt öffentlich betreiben; für externe Nutzung wären unter anderem ein geprüftes Deployment mit HTTPS, Missbrauchsschutz, Monitoring und Sicherheitsreview erforderlich.
-- Überschreiben vor dem Löschen garantiert keine sichere physische Löschung auf SSDs, Copy-on-Write-Dateisystemen, Snapshots oder Backups.
-- Die Beispiel-Präsentation und Konzeptdateien sind Lernmaterial, keine Rechtsberatung, Sicherheitszertifizierung oder Nachweis der DSGVO-Konformität.
-- `/storage` enthält Laufzeitdaten und wird nicht versioniert.
+## Repository contents
+
+- [English presentation (PPTX)](./CrypShare_Project_Presentation_EN.pptx)
+- [Technical notes and limitations](./DSGVO_Technical_Notes.md)
+- [Application source](./index.html)
+- [Python server](./server.py) · [Node.js server](./server.js) · [PowerShell server](./server.ps1)
+
+The original project concept, technical specification, and German presentation are also included as supplementary learning materials. Runtime uploads and metadata in `/storage` are excluded from Git.
